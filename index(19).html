@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wonder Note</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#C9A84C;--gold-l:#E8D5A3;
+  --cream:#FAF8F4;--pearl:#F2EFE9;--stone:#DDD9D3;
+  --charcoal:#3A3530;--muted:#8A8278;--ink:#1A1714;
+}
+body{font-family:Georgia,serif;background:var(--cream)}
+
+.wn-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--ink)}
+.wn-logo{font-family:Georgia;font-size:16px;color:var(--gold-l);letter-spacing:3px;text-transform:uppercase}
+.wn-logo small{display:block;font-size:10px;letter-spacing:5px;color:var(--muted);margin-top:2px;font-family:sans-serif}
+.wn-nav-btn{font-family:sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);background:none;border:none;border-bottom:1px solid transparent;padding:6px 0;cursor:pointer;transition:color .3s,border-color .3s}
+.wn-nav-btn:hover,.wn-nav-btn.on{color:var(--gold-l);border-bottom-color:var(--gold)}
+
+.wn-hero{position:relative;height:calc(100vh - 57px);overflow:hidden}
+.wn-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.8s ease;background-size:cover;background-position:center}
+.wn-slide.on{opacity:1}
+.wn-veil{position:absolute;inset:0;background:rgba(20,16,10,.52)}
+.wn-hero-txt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 40px}
+.wn-eyebrow{font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px;font-family:sans-serif}
+.wn-headline{font-family:Georgia;font-size:40px;font-weight:400;color:#FAF8F4;letter-spacing:2px}
+.wn-tagline{margin-top:12px;font-size:13px;color:rgba(240,237,232,.7);letter-spacing:1px;line-height:1.7;font-family:sans-serif}
+.wn-dots{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:3}
+.wn-dot{width:32px;height:2px;background:rgba(201,168,76,.25);cursor:pointer;transition:background .4s,width .4s}
+.wn-dot.on{background:var(--gold);width:44px}
+
+.wn-feat-bar{display:grid;grid-template-columns:repeat(3,1fr);position:absolute;bottom:0;left:0;right:0;z-index:2;background:rgba(26,23,20,.72);backdrop-filter:blur(6px);border-top:1px solid rgba(201,168,76,.2)}
+.wn-feat{padding:22px 24px;border-right:1px solid rgba(201,168,76,.15);cursor:pointer;transition:background .2s}
+.wn-feat:last-child{border-right:none}
+.wn-feat:hover{background:rgba(201,168,76,.08)}
+.wn-feat-icon{margin-bottom:12px}
+.wn-feat-t{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-l);margin-bottom:6px;font-family:sans-serif;font-weight:600}
+.wn-feat-d{font-size:12px;color:rgba(240,237,232,.55);line-height:1.6;font-family:sans-serif}
+
+.wn-subjects-wrap{background:var(--cream);padding:32px 32px 24px}
+.wn-section-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:20px;font-family:sans-serif}
+.wn-bubbles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+.bubble{border-radius:16px;overflow:hidden;cursor:pointer;border:1px solid var(--stone);transition:transform .25s}
+.bubble:hover{transform:translateY(-4px)}
+.bubble-face{height:140px;background-size:110%;background-position:center;position:relative;display:flex;align-items:flex-end}
+.bubble-face-veil{position:absolute;inset:0;background:rgba(26,23,20,.38);transition:background .3s}
+.bubble:hover .bubble-face-veil,.bubble.open .bubble-face-veil{background:rgba(26,23,20,.6)}
+.bubble-name{position:relative;z-index:2;padding:10px 14px;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold-l);width:100%;font-family:sans-serif}
+.bubble-body{max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease;background:var(--pearl);padding:0 14px}
+.bubble.open .bubble-body{max-height:120px;padding:10px 14px}
+.bubble-btns{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.bubble-btn{display:flex;align-items:center;gap:6px;font-family:sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;background:none;border:none;cursor:pointer;padding:4px 0;transition:opacity .2s}
+.bubble-btn-see{color:var(--gold)}.bubble-btn-see:hover{opacity:.7}
+.bubble-btn-add{color:var(--gold)}.bubble-btn-add:hover{opacity:.7}
+.bubble-avg{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--stone)}
+.bubble-avg-lbl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:sans-serif}
+.bubble-avg-val{font-family:Georgia;font-size:15px;color:var(--charcoal)}
+.avg-good{color:#27AE60}.avg-med{color:#E67E22}.avg-low{color:#C0392B}
+
+/* Modal notes */
+.notes-overlay{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center}
+.notes-overlay.on{display:flex}
+.notes-backdrop{position:absolute;inset:0;backdrop-filter:blur(8px);background:rgba(26,23,20,.45)}
+.notes-modal{position:relative;z-index:1;background:var(--cream);border:1px solid var(--stone);width:420px;max-width:92vw;max-height:80vh;display:flex;flex-direction:column;border-radius:4px;overflow:hidden}
+.notes-modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid var(--stone)}
+.notes-modal-title{font-family:Georgia;font-size:18px;color:var(--charcoal);letter-spacing:.5px}
+.notes-modal-sub{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-family:sans-serif;margin-top:3px}
+.notes-modal-close{background:none;border:none;font-size:18px;color:var(--muted);cursor:pointer;line-height:1;transition:color .2s}
+.notes-modal-close:hover{color:var(--charcoal)}
+.notes-modal-body{flex:1;overflow-y:auto;padding:16px 24px}
+.notes-modal-body::-webkit-scrollbar{width:3px}
+.notes-modal-body::-webkit-scrollbar-thumb{background:var(--stone)}
+.notes-modal-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-family:sans-serif}
+.notes-modal-row label{font-size:11px;color:var(--muted);width:20px;flex-shrink:0;text-align:right}
+.notes-modal-row input{font-size:13px;padding:4px 6px;text-align:center;border:none;border-bottom:1px solid var(--stone);background:transparent;color:var(--charcoal);outline:none;transition:border-color .2s;font-family:sans-serif;min-width:0;-moz-appearance:textfield}
+.notes-modal-row input::-webkit-outer-spin-button,.notes-modal-row input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.notes-modal-row input:focus{border-bottom-color:var(--gold)}
+.notes-modal-row input.inp-note{flex:3}
+.notes-modal-row input.inp-coef{flex:2}
+.notes-modal-row .inp-sep{font-size:12px;color:var(--muted);flex-shrink:0}
+.notes-modal-row .inp-lbl{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;font-family:sans-serif;flex-shrink:0}
+.notes-modal-del{background:none;border:none;color:var(--stone);cursor:pointer;font-size:13px;padding:0 3px;transition:color .2s;flex-shrink:0}
+.notes-modal-del:hover{color:#C0392B}
+.notes-modal-foot{padding:14px 24px;border-top:1px solid var(--stone);display:flex;align-items:center;justify-content:space-between}
+.notes-modal-avg{font-family:Georgia;font-size:17px}
+.notes-modal-avg-lbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);font-family:sans-serif;margin-bottom:2px}
+
+.bubble-del{position:absolute;top:8px;right:8px;z-index:3;background:rgba(26,23,20,.55);border:none;color:var(--gold-l);font-size:10px;width:20px;height:20px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
+.bubble:hover .bubble-del{opacity:1}
+
+.bubble-add{border-radius:16px;border:1px dashed var(--stone);cursor:pointer;height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);font-family:sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;transition:border-color .2s,color .2s;background:transparent}
+.bubble-add:hover{border-color:var(--gold);color:var(--gold)}
+
+.wn-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--stone);border:1px solid var(--stone);margin-bottom:16px}
+.wn-stat{background:var(--cream);padding:16px 20px}
+.wn-stat-lbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-family:sans-serif}
+.wn-stat-lbl.muted{color:var(--muted)}
+.wn-stat-val{font-family:Georgia;font-size:20px;color:var(--charcoal);letter-spacing:.5px}
+#s-best,#s-weak{font-size:17px}
+.wn-analysis{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.wn-abox{padding:18px 20px;border:1px solid var(--stone);background:var(--cream)}
+.wn-abox-lbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;font-family:sans-serif}
+.wn-abox-lbl.pos{color:var(--gold)}.wn-abox-lbl.neg{color:var(--muted)}
+.wn-abox-val{font-family:Georgia;font-size:16px;color:var(--charcoal);line-height:2;letter-spacing:.5px}
+
+.page{display:none}.page.on{display:block}
+</style>
+</head>
+<body>
+
+<div class="wn-nav">
+  <div class="wn-logo">Wonder Note<small>par Manon</small></div>
+  <button class="wn-nav-btn on" id="bn-home" onclick="goPage('home')">Accueil</button>
+</div>
+
+<div id="p-home" class="page on">
+  <div class="wn-hero">
+    <div class="wn-slide on"  style="background-image:url('images/slide-1.png')"></div>
+    <div class="wn-slide" style="background-image:url('images/slide-2.png')"></div>
+    <div class="wn-slide" style="background-image:url('images/slide-3.png')"></div>
+    <div class="wn-slide" style="background-image:url('images/slide-4.png')"></div>
+    <div class="wn-slide" style="background-image:url('images/slide-5.png')"></div>
+    <div class="wn-slide" style="background-image:url('images/slide-6.png')"></div>
+    <div class="wn-veil"></div>
+    <div class="wn-hero-txt">
+      <div class="wn-eyebrow">Ton espace personnel</div>
+      <div class="wn-headline">Wonder Note</div>
+      <div class="wn-tagline">Suis tes notes avec élégance.<br>Découvre tes forces, révise avec intention.</div>
+    </div>
+    <div class="wn-dots" id="wn-dots"></div>
+    <div class="wn-feat-bar">
+      <div class="wn-feat" onclick="goPage('notes')">
+        <div class="wn-feat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="wn-feat-t">Moyennes</div>
+        <div class="wn-feat-d">Calcul automatique par matière.</div>
+      </div>
+      <div class="wn-feat" onclick="goPage('analyse')">
+        <div class="wn-feat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="wn-feat-t">Analyse</div>
+        <div class="wn-feat-d">Points forts et axes à améliorer.</div>
+      </div>
+      <div class="wn-feat" onclick="goPage('notes')">
+        <div class="wn-feat-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+        <div class="wn-feat-t">Fiches</div>
+        <div class="wn-feat-d">Fiches de révision personnalisées.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="p-notes" class="page">
+  <div class="wn-subjects-wrap">
+    <div class="wn-section-label">Mes matières</div>
+    <div class="wn-bubbles" id="wn-bubbles"></div>
+    <div id="add-sub-form" style="display:none;flex-direction:column;gap:12px;margin-top:16px;padding:16px;border:1px solid var(--stone);border-radius:8px;max-width:400px;background:var(--pearl)">
+      <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-family:sans-serif">Nouvelle matière</div>
+      <input id="new-sub-name" type="text" placeholder="Nom de la matière" style="font-family:sans-serif;font-size:12px;padding:7px 12px;border:none;border-bottom:1px solid var(--stone);background:transparent;color:var(--charcoal);outline:none;width:100%;">
+      <div>
+        <label style="font-family:sans-serif;font-size:11px;color:var(--muted);display:block;margin-bottom:6px;">Photo (depuis ton ordinateur)</label>
+        <input id="new-sub-img" type="file" accept="image/*" style="font-family:sans-serif;font-size:11px;color:var(--muted);width:100%;">
+      </div>
+      <div id="new-sub-preview" style="display:none;height:80px;border-radius:8px;background-size:cover;background-position:center;border:1px solid var(--stone)"></div>
+      <button onclick="addSubject()" style="font-family:sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;background:var(--gold);color:var(--ink);border:none;padding:8px 16px;cursor:pointer;border-radius:4px;align-self:flex-start;">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<div id="p-analyse" class="page">
+
+  <!-- Popup seuils -->
+  <div id="seuils-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,23,20,.7);z-index:100;align-items:center;justify-content:center;">
+    <div style="background:var(--cream);padding:36px;max-width:380px;width:90%;border:1px solid var(--stone);">
+      <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-family:sans-serif">Personnalise ton analyse</div>
+      <p style="font-size:12px;color:var(--muted);font-family:sans-serif;margin-bottom:24px;line-height:1.7">Ces seuils servent à déterminer tes points forts et ce qu'il faut retravailler.</p>
+      <div style="margin-bottom:18px">
+        <label style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--charcoal);font-family:sans-serif;display:block;margin-bottom:8px">⭐ Point fort à partir de</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input id="seuil-fort" type="number" min="0" max="20" step="0.5" value="13" style="width:70px;font-size:16px;font-family:Georgia;padding:6px 10px;border:none;border-bottom:2px solid var(--gold);background:transparent;color:var(--charcoal);outline:none;text-align:center;">
+          <span style="font-size:12px;color:var(--muted);font-family:sans-serif">/ 20</span>
+        </div>
+      </div>
+      <div style="margin-bottom:28px">
+        <label style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--charcoal);font-family:sans-serif;display:block;margin-bottom:8px">⚠️ À retravailler en dessous de</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input id="seuil-faible" type="number" min="0" max="20" step="0.5" value="10" style="width:70px;font-size:16px;font-family:Georgia;padding:6px 10px;border:none;border-bottom:2px solid var(--stone);background:transparent;color:var(--charcoal);outline:none;text-align:center;">
+          <span style="font-size:12px;color:var(--muted);font-family:sans-serif">/ 20</span>
+        </div>
+      </div>
+      <button onclick="saveSeuils()" style="font-family:sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;background:var(--gold);color:var(--ink);border:none;padding:10px 24px;cursor:pointer;border-radius:4px;width:100%;">Valider</button>
+    </div>
+  </div>
+
+  <div style="position:relative;padding:32px 32px 24px;background:var(--cream);overflow:hidden;min-height:calc(100vh - 57px)">
+    <div style="position:absolute;inset:0;background-image:url('images/slide-1.png');background-size:cover;background-position:center;opacity:0.07;pointer-events:none"></div>
+    <div style="position:relative;z-index:1">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);font-family:sans-serif">Bilan général</div>
+      <button onclick="openSeuils()" style="font-family:sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:none;border:1px solid var(--stone);padding:5px 12px;cursor:pointer;border-radius:4px;">⚙ Mes seuils</button>
+    </div>
+    <div class="wn-stats">
+      <div class="wn-stat"><div class="wn-stat-lbl">Moyenne générale</div><div class="wn-stat-val" id="s-gen">—</div></div>
+      <div class="wn-stat"><div class="wn-stat-lbl">Meilleure matière</div><div class="wn-stat-val" id="s-best">—</div></div>
+      <div class="wn-stat"><div class="wn-stat-lbl muted">À renforcer</div><div class="wn-stat-val" id="s-weak">—</div></div>
+    </div>
+    <div class="wn-analysis">
+      <div class="wn-abox"><div class="wn-abox-lbl pos">Points forts</div><div class="wn-abox-val" id="s-strong">—</div></div>
+      <div class="wn-abox"><div class="wn-abox-lbl neg">À travailler</div><div class="wn-abox-val" id="s-todo">—</div></div>
+    </div>
+    <p style="font-size:11px;color:var(--muted);font-family:sans-serif;margin-top:14px;font-style:italic" id="s-hint">Entre d'abord tes notes dans <span style="color:var(--gold);cursor:pointer" onclick="goPage('notes')">Moyennes</span> pour voir ton analyse.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modale notes -->
+<div class="notes-overlay" id="notes-overlay">
+  <div class="notes-backdrop" onclick="closeNotesModal()"></div>
+  <div class="notes-modal">
+    <div class="notes-modal-head">
+      <div>
+        <div class="notes-modal-sub">Mes notes</div>
+        <div class="notes-modal-title" id="modal-title">—</div>
+      </div>
+      <button class="notes-modal-close" onclick="closeNotesModal()">✕</button>
+    </div>
+    <div class="notes-modal-body" id="modal-notes-list"></div>
+    <div class="notes-modal-foot">
+      <div>
+        <div class="notes-modal-avg-lbl">Moyenne</div>
+        <div class="notes-modal-avg" id="modal-avg">—</div>
+      </div>
+      <button onclick="addNoteModal()" style="font-family:sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);background:none;border:1px solid var(--gold);padding:7px 14px;cursor:pointer;border-radius:4px;display:flex;align-items:center;gap:6px;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter une note
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUBS_DEFAULT=[
+  {name:"Mathématiques",   img:"images/matiere-mathematiques.png",                notes:[]},
+  {name:"Français",        img:"images/matiere-francais.png",                     notes:[]},
+  {name:"Histoire-Géo",    img:"images/matiere-histoire-geo.png",                 notes:[]},
+  {name:"Anglais",         img:"images/matiere-anglais.png",                      notes:[]},
+  {name:"Sciences",        img:"images/Capture_d_écran_2026-05-09_190126.png",    notes:[]},
+  {name:"EPS",             img:"images/matiere-eps.png",                          notes:[]},
+  {name:"Physique-Chimie", img:"images/Capture_d_écran_2026-05-09_200731.png",    notes:[]},
+  {name:"Art",             img:"images/matiere-art.png",                          notes:[]},
+];
+let SUBS=SUBS_DEFAULT.map(s=>({...s,notes:[...s.notes]}));
+
+const STORAGE_KEY = 'wondernote-manon-v1';
+(function loadSavedNotes(){
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    if(saved.__subs__) SUBS=saved.__subs__;
+    else SUBS.forEach(s=>{ if(saved[s.name]) s.notes=saved[s.name]; });
+  } catch(e) { console.warn('Pas de sauvegarde précédente.', e); }
+})();
+function saveNotes(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({__subs__:SUBS}));
+}
+function addSubject(){
+  const name=document.getElementById('new-sub-name').value.trim();
+  if(!name){alert('Entre un nom de matière !');return;}
+  if(SUBS.find(s=>s.name.toLowerCase()===name.toLowerCase())){
+    alert('Cette matière existe déjà !');return;
+  }
+  const fileInput=document.getElementById('new-sub-img');
+  const file=fileInput.files[0];
+  if(file){
+    const reader=new FileReader();
+    reader.onload=function(e){
+      SUBS.push({name,img:e.target.result,notes:[]});
+      saveNotes();
+      document.getElementById('new-sub-name').value='';
+      fileInput.value='';
+      document.getElementById('new-sub-preview').style.display='none';
+      document.getElementById('add-sub-form').style.display='none';
+      renderBubbles();
+    };
+    reader.readAsDataURL(file);
+  } else {
+    SUBS.push({name,img:'images/slide-3.png',notes:[]});
+    saveNotes();
+    document.getElementById('new-sub-name').value='';
+    document.getElementById('add-sub-form').style.display='none';
+    renderBubbles();
+  }
+}
+
+// Prévisualisation de l'image choisie
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('new-sub-img').addEventListener('change',function(){
+    const file=this.files[0];
+    const preview=document.getElementById('new-sub-preview');
+    if(file){
+      const reader=new FileReader();
+      reader.onload=e=>{
+        preview.style.backgroundImage=`url('${e.target.result}')`;
+        preview.style.display='block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      preview.style.display='none';
+    }
+  });
+});
+function removeSubject(i){
+  if(!confirm('Supprimer "'+SUBS[i].name+'" et toutes ses notes ?')) return;
+  openBubbles.delete(i);
+  SUBS.splice(i,1);
+  saveNotes(); renderBubbles(); updateBilan();
+}
+
+const openBubbles=new Set();
+let modalIdx=null;
+
+function getAvg(notes){
+  const valid=notes.filter(n=>n.v!==''&&n.sur!==''&&!isNaN(parseFloat(n.v))&&!isNaN(parseFloat(n.sur))&&parseFloat(n.sur)>0);
+  if(!valid.length) return null;
+  const total=valid.reduce((a,n)=>a+parseFloat(n.coef||1),0);
+  const sum=valid.reduce((a,n)=>a+(parseFloat(n.v)/parseFloat(n.sur)*20)*parseFloat(n.coef||1),0);
+  return Math.round(sum/total*10)/10;
+}
+function avgCls(v){return v>=14?'avg-good':v>=10?'avg-med':'avg-low'}
+
+// --- Modale ---
+function openNotesModal(i, modeAdd=false){
+  modalIdx=i;
+  document.getElementById('modal-title').textContent=SUBS[i].name;
+  if(modeAdd){
+    // Mode ajout : on affiche seulement une nouvelle ligne vierge
+    SUBS[i].notes.push({v:'',sur:'',coef:''});
+    saveNotes();
+    renderModalNotes(true); // true = affiche seulement la dernière note
+  } else {
+    renderModalNotes(false);
+  }
+  document.getElementById('notes-overlay').classList.add('on');
+}
+function closeNotesModal(){
+  document.getElementById('notes-overlay').classList.remove('on');
+  modalIdx=null;
+  renderBubbles(); updateBilan();
+}
+function renderModalNotes(addOnly=false){
+  const i=modalIdx;
+  const list=document.getElementById('modal-notes-list');
+  list.innerHTML='';
+  const notes=addOnly ? [SUBS[i].notes[SUBS[i].notes.length-1]] : SUBS[i].notes;
+  const offset=addOnly ? SUBS[i].notes.length-1 : 0;
+  if(!notes.length || (addOnly && !notes[0])){
+    list.innerHTML='<p style="font-family:sans-serif;font-size:12px;color:var(--muted);padding:8px 0;font-style:italic">Aucune note pour l\'instant.</p>';
+    refreshModalAvg(); return;
+  }
+  notes.forEach((n,jj)=>{
+    const j=offset+jj;
+    const row=document.createElement('div');
+    row.className='notes-modal-row';
+    row.innerHTML=`
+      <label>${j+1}.</label>
+      <input class="inp-note" type="number" min="0" step="0.01" value="${n.v}" placeholder="note" data-field="v" data-j="${j}">
+      <span class="inp-sep">/</span>
+      <span class="inp-lbl">sur</span>
+      <input class="inp-coef" type="number" min="0.01" step="0.01" value="${n.sur}" placeholder="sur" data-field="sur" data-j="${j}">
+      <span class="inp-sep">×</span>
+      <span class="inp-lbl">coef</span>
+      <input class="inp-coef" type="number" min="0" step="0.01" value="${n.coef}" placeholder="coef" data-field="coef" data-j="${j}">
+      <button class="notes-modal-del" onclick="removeNoteModal(${j})">✕</button>`;
+    row.querySelectorAll('input').forEach(inp=>{
+      inp.addEventListener('input',()=>{
+        SUBS[i].notes[+inp.dataset.j][inp.dataset.field]=inp.value;
+        saveNotes(); refreshModalAvg();
+      });
+    });
+    list.appendChild(row);
+  });
+  refreshModalAvg();
+}
+function refreshModalAvg(){
+  const i=modalIdx;
+  const a=getAvg(SUBS[i].notes);
+  const el=document.getElementById('modal-avg');
+  el.className='notes-modal-avg'+(a!==null?' '+avgCls(a):'');
+  el.textContent=a!==null?a.toFixed(1)+' / 20':'—';
+}
+function addNoteModal(){
+  SUBS[modalIdx].notes.push({v:'',sur:'',coef:''});
+  saveNotes(); renderModalNotes(false);
+  document.getElementById('modal-notes-list').scrollTop=9999;
+}
+function removeNoteModal(j){
+  SUBS[modalIdx].notes.splice(j,1);
+  saveNotes(); renderModalNotes();
+}
+
+// --- Bulles ---
+function refreshBubbleAvg(i){
+  const el=document.querySelector(`.bubble[data-idx="${i}"] .bubble-avg-val`);
+  if(!el) return;
+  const a=getAvg(SUBS[i].notes);
+  el.className='bubble-avg-val'+(a!==null?' '+avgCls(a):'');
+  el.textContent=a!==null?a.toFixed(1)+' / 20':'—';
+}
+
+function renderBubbles(){
+  const el=document.getElementById('wn-bubbles');
+  el.innerHTML='';
+  SUBS.forEach((s,i)=>{
+    const isOpen=openBubbles.has(i);
+    const a=getAvg(s.notes);
+    const div=document.createElement('div');
+    div.className='bubble'+(isOpen?' open':'');
+    div.dataset.idx=i;
+    div.innerHTML=`
+      <div class="bubble-face" style="background-image:url('${s.img}')">
+        <div class="bubble-face-veil"></div>
+        <div class="bubble-name">${s.name}</div>
+        <button class="bubble-del" title="Supprimer" onclick="event.stopPropagation();removeSubject(${i})">✕</button>
+      </div>
+      <div class="bubble-body">
+        <div class="bubble-btns">
+          <button class="bubble-btn bubble-btn-see" onclick="event.stopPropagation();openNotesModal(${i},false)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Voir mes notes
+          </button>
+          <button class="bubble-btn bubble-btn-add" onclick="event.stopPropagation();openNotesModal(${i},true)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Ajouter une note
+          </button>
+        </div>
+        <div class="bubble-avg">
+          <span class="bubble-avg-lbl">Moyenne</span>
+          <span class="bubble-avg-val${a!==null?' '+avgCls(a):''}">
+            ${a!==null?a.toFixed(1)+' / 20':'—'}
+          </span>
+        </div>
+      </div>`;
+    div.querySelector('.bubble-face').addEventListener('click',()=>{
+      if(openBubbles.has(i))openBubbles.delete(i);else openBubbles.add(i);
+      renderBubbles();updateBilan();
+    });
+    el.appendChild(div);
+  });
+  // Tuile "+"
+  const addTile=document.createElement('div');
+  addTile.className='bubble-add';
+  addTile.innerHTML=`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Ajouter</span>`;
+  addTile.onclick=()=>{const f=document.getElementById('add-sub-form');f.style.display=f.style.display==='flex'?'none':'flex';if(f.style.display==='flex')document.getElementById('new-sub-name').focus();};
+  el.appendChild(addTile);
+}
+function updateBilan(){
+  const avgs=SUBS.map(s=>{return{name:s.name,v:getAvg(s.notes)}}).filter(s=>s.v!==null);
+  const hint=document.getElementById('s-hint');
+  if(!avgs.length){
+    ['s-gen','s-best','s-weak','s-strong','s-todo'].forEach(id=>document.getElementById(id).textContent='—');
+    if(hint) hint.style.display='block';
+    return;
+  }
+  if(hint) hint.style.display='none';
+  const gen=Math.round(avgs.reduce((a,b)=>a+b.v,0)/avgs.length*10)/10;
+  const sorted=[...avgs].sort((a,b)=>b.v-a.v);
+  document.getElementById('s-gen').textContent=gen.toFixed(1)+' / 20';
+  document.getElementById('s-best').textContent=sorted[0].name+' · '+sorted[0].v.toFixed(1);
+  document.getElementById('s-weak').textContent=sorted[sorted.length-1].name+' · '+sorted[sorted.length-1].v.toFixed(1);
+  document.getElementById('s-strong').textContent=sorted.filter(s=>s.v>=SEUIL_FORT).map(s=>s.name).join(', ')||'Continue ainsi !';
+  document.getElementById('s-todo').textContent=sorted.filter(s=>s.v<SEUIL_FAIBLE).map(s=>s.name).join(', ')||'Rien pour l\'instant';
+}
+
+// --- Seuils ---
+let SEUIL_FORT=13, SEUIL_FAIBLE=10;
+const SEUILS_KEY='wondernote-seuils-v1';
+const SEUILS_SEEN_KEY='wondernote-seuils-seen';
+(function loadSeuils(){
+  try{
+    const s=JSON.parse(localStorage.getItem(SEUILS_KEY)||'null');
+    if(s){SEUIL_FORT=s.fort;SEUIL_FAIBLE=s.faible;}
+  }catch(e){}
+})();
+function openSeuils(){
+  document.getElementById('seuil-fort').value=SEUIL_FORT;
+  document.getElementById('seuil-faible').value=SEUIL_FAIBLE;
+  document.getElementById('seuils-overlay').style.display='flex';
+}
+function saveSeuils(){
+  SEUIL_FORT=parseFloat(document.getElementById('seuil-fort').value)||13;
+  SEUIL_FAIBLE=parseFloat(document.getElementById('seuil-faible').value)||10;
+  localStorage.setItem(SEUILS_KEY,JSON.stringify({fort:SEUIL_FORT,faible:SEUIL_FAIBLE}));
+  localStorage.setItem(SEUILS_SEEN_KEY,'1');
+  document.getElementById('seuils-overlay').style.display='none';
+  updateBilan();
+}
+
+function goPage(p){
+  ['home','notes','analyse'].forEach(id=>{
+    document.getElementById('p-'+id).classList.toggle('on',id===p);
+  });
+  document.getElementById('bn-home').classList.toggle('on',p==='home');
+  if(p==='notes')renderBubbles();
+  if(p==='analyse'){
+    // Première visite sur Analyse → ouvre le popup seuils
+    if(!localStorage.getItem(SEUILS_SEEN_KEY)) openSeuils();
+    updateBilan();
+  }
+}
+const slides=document.querySelectorAll('.wn-slide');
+const dotsEl=document.getElementById('wn-dots');
+let cur=0;
+slides.forEach((_,i)=>{
+  const d=document.createElement('div');
+  d.className='wn-dot'+(i===0?' on':'');
+  d.onclick=()=>goTo(i);
+  dotsEl.appendChild(d);
+});
+function goTo(n){
+  slides[cur].classList.remove('on');dotsEl.children[cur].classList.remove('on');
+  cur=n;slides[cur].classList.add('on');dotsEl.children[cur].classList.add('on');
+}
+setInterval(()=>goTo((cur+1)%slides.length),5000);
+</script>
+</body>
+</html>
